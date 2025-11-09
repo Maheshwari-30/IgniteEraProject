@@ -160,3 +160,23 @@ MEDIA_ROOT = BASE_DIR / "media"
 # Default primary key field type
 # -------------------------------------------------
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+import os
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [os.path.join(BASE_DIR, 'core', 'templates')],  # 👈 add this line
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]

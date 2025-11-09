@@ -1,21 +1,59 @@
+from django.http import JsonResponse
+from django.shortcuts import render
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import Profile, Assessment, LearningModule, LearningPlan, Article, ContactSubmission, Activity
-from .serializers import (UserSerializer, RegisterSerializer, ProfileSerializer,
-                          AssessmentSerializer, LearningModuleSerializer, LearningPlanSerializer,
-                          ArticleSerializer, ContactSerializer, ActivitySerializer)
+from .serializers import (
+    UserSerializer, RegisterSerializer, ProfileSerializer,
+    AssessmentSerializer, LearningModuleSerializer, LearningPlanSerializer,
+    ArticleSerializer, ContactSerializer, ActivitySerializer
+)
 import datetime
 
 User = get_user_model()
+
+# ----------------------------------------------------------
+# ✅ NEW — Homepage (HTML) + Root API (JSON)
+# ----------------------------------------------------------
+
+def home_view(request):
+    """Renders your HTML home page"""
+    return render(request, "core/home.html")
+
+
+def api_root(request):
+    """Returns basic API info as JSON"""
+    data = {
+        "project": "IgniteEra Backend API",
+        "message": "Welcome to IgniteEra Backend API 🚀",
+        "status": "success",
+        "environment": "development",
+        "endpoints": {
+            "admin": "/admin/",
+            "api_root": "/api/",
+            "auth_login_logout": "/api/auth/",
+            "auth_registration": "/api/auth/registration/",
+            "token_obtain": "/api/token/",
+            "token_refresh": "/api/token/refresh/",
+        },
+        "credits": "Developed by IgniteEra Team ⚡",
+    }
+    return JsonResponse(data)
+
+
+# ----------------------------------------------------------
+# 🔹 Your existing API ViewSets remain unchanged below
+# ----------------------------------------------------------
 
 class IsAdminOrReadOnly(permissions.BasePermission):
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS:
             return True
         return request.user.is_authenticated and request.user.role == "admin"
+
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all().order_by("id")
@@ -34,6 +72,7 @@ class UserViewSet(viewsets.ModelViewSet):
             "access": str(refresh.access_token)
         }, status=status.HTTP_201_CREATED)
 
+
 class ProfileViewSet(viewsets.ModelViewSet):
     queryset = Profile.objects.select_related("user").all()
     serializer_class = ProfileSerializer
@@ -45,15 +84,18 @@ class ProfileViewSet(viewsets.ModelViewSet):
             return Profile.objects.all()
         return Profile.objects.filter(user=user)
 
+
 class AssessmentViewSet(viewsets.ModelViewSet):
     queryset = Assessment.objects.all()
     serializer_class = AssessmentSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+
 class LearningModuleViewSet(viewsets.ModelViewSet):
     queryset = LearningModule.objects.all()
     serializer_class = LearningModuleSerializer
     permission_classes = [IsAdminOrReadOnly]
+
 
 class LearningPlanViewSet(viewsets.ModelViewSet):
     queryset = LearningPlan.objects.all()
@@ -66,20 +108,24 @@ class LearningPlanViewSet(viewsets.ModelViewSet):
             return LearningPlan.objects.all()
         return LearningPlan.objects.filter(user=user)
 
+
 class ArticleViewSet(viewsets.ModelViewSet):
     queryset = Article.objects.all()
     serializer_class = ArticleSerializer
     permission_classes = [IsAdminOrReadOnly]
+
 
 class ContactViewSet(viewsets.ModelViewSet):
     queryset = ContactSubmission.objects.all()
     serializer_class = ContactSerializer
     permission_classes = [permissions.AllowAny]
 
+
 class ActivityViewSet(viewsets.ModelViewSet):
     queryset = Activity.objects.all()
     serializer_class = ActivitySerializer
     permission_classes = [permissions.IsAuthenticated]
+
 
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
